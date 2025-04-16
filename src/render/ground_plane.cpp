@@ -88,6 +88,10 @@ void GroundPlane::prepare() {
     groundPlaneProgram =
         render::engine->requestShader("GROUND_PLANE_SHADOW", rules, render::ShaderReplacementDefaults::Process);
     break;
+  case GroundPlaneMode::Checkerboard:
+    groundPlaneProgram =
+        render::engine->requestShader("GROUND_PLANE_CHECKERBOARD", rules, render::ShaderReplacementDefaults::Process);
+    break;
   }
   populateGroundPlaneGeometry();
 
@@ -104,9 +108,11 @@ void GroundPlane::prepare() {
 
   // For all effects which will use the alternate scene buffers, prepare them
   if (options::groundPlaneMode == GroundPlaneMode::TileReflection ||
+      options::groundPlaneMode == GroundPlaneMode::Checkerboard ||
       options::groundPlaneMode == GroundPlaneMode::ShadowOnly) {
 
-    if (options::groundPlaneMode == GroundPlaneMode::TileReflection) {
+    if (options::groundPlaneMode == GroundPlaneMode::TileReflection ||
+        options::groundPlaneMode == GroundPlaneMode::Checkerboard) {
       // only use color buffer for reflection
       sceneAltColorTexture =
           render::engine->generateTextureBuffer(TextureFormat::RGBA16F, view::bufferWidth, view::bufferHeight);
@@ -117,7 +123,8 @@ void GroundPlane::prepare() {
 
 
     sceneAltFrameBuffer = render::engine->generateFrameBuffer(view::bufferWidth, view::bufferHeight);
-    if (options::groundPlaneMode == GroundPlaneMode::TileReflection) {
+    if (options::groundPlaneMode == GroundPlaneMode::TileReflection ||
+        options::groundPlaneMode == GroundPlaneMode::Checkerboard) {
       sceneAltFrameBuffer->addColorBuffer(sceneAltColorTexture);
     }
     sceneAltFrameBuffer->addDepthBuffer(sceneAltDepthTexture);
@@ -128,7 +135,8 @@ void GroundPlane::prepare() {
   }
 
 
-  if (options::groundPlaneMode == GroundPlaneMode::TileReflection) { // Mirrored scene buffer
+  if (options::groundPlaneMode == GroundPlaneMode::TileReflection || 
+      options::groundPlaneMode == GroundPlaneMode::Checkerboard) { // Mirrored scene buffer
     groundPlaneProgram->setTextureFromBuffer("t_mirrorImage", sceneAltColorTexture.get());
   }
 
@@ -223,7 +231,8 @@ void GroundPlane::draw(bool isRedraw) {
     groundPlaneProgram->setUniform("u_viewportDim", viewportDim);
 
     if (options::groundPlaneMode == GroundPlaneMode::Tile ||
-        options::groundPlaneMode == GroundPlaneMode::TileReflection) {
+        options::groundPlaneMode == GroundPlaneMode::TileReflection ||
+        options::groundPlaneMode == GroundPlaneMode::Checkerboard) {
       groundPlaneProgram->setUniform("u_center", state::center());
       groundPlaneProgram->setUniform("u_basisX", baseForward);
       groundPlaneProgram->setUniform("u_basisY", baseRight);
@@ -250,6 +259,12 @@ void GroundPlane::draw(bool isRedraw) {
     groundPlaneProgram->setUniform("u_basisZ", baseUp);
     groundPlaneProgram->setUniform("u_groundHeight", groundHeight);
     groundPlaneProgram->setUniform("u_lengthScale", state::lengthScale);
+
+    if (options::groundPlaneMode == GroundPlaneMode::Checkerboard) {
+      groundPlaneProgram->setUniform("u_checkerSize", options::checkerboardSize);
+      groundPlaneProgram->setUniform("u_checkerColor1", options::checkerboardColor1);
+      groundPlaneProgram->setUniform("u_checkerColor2", options::checkerboardColor2);
+    }
   };
 
   /*
@@ -269,7 +284,8 @@ void GroundPlane::draw(bool isRedraw) {
   */
 
   // Render the scene to implement the mirror effect
-  if (!isRedraw && options::groundPlaneMode == GroundPlaneMode::TileReflection) {
+  if (!isRedraw && (options::groundPlaneMode == GroundPlaneMode::TileReflection ||
+      options::groundPlaneMode == GroundPlaneMode::Checkerboard)) {
 
     // Prepare the alternate scene buffers
     // (use a texture 1/4 the area of the view buffer, it's supposed to be blurry anyway and this saves perf)
@@ -394,6 +410,8 @@ void GroundPlane::buildGui() {
       return "Tile Reflection";
     case GroundPlaneMode::ShadowOnly:
       return "Shadow Only";
+    case GroundPlaneMode::Checkerboard:
+      return "Checkerboard";
     }
     return "";
   };
@@ -414,7 +432,7 @@ void GroundPlane::buildGui() {
     ImGui::PushItemWidth(160);
     if (ImGui::BeginCombo("Mode", modeName(options::groundPlaneMode).c_str())) {
       for (GroundPlaneMode m : {GroundPlaneMode::None, GroundPlaneMode::Tile, GroundPlaneMode::TileReflection,
-                                GroundPlaneMode::ShadowOnly}) {
+                                GroundPlaneMode::ShadowOnly, GroundPlaneMode::Checkerboard}) {
         std::string mName = modeName(m);
         if (ImGui::Selectable(mName.c_str(), options::groundPlaneMode == m)) {
           options::groundPlaneMode = m;
@@ -469,6 +487,11 @@ void GroundPlane::buildGui() {
     case GroundPlaneMode::ShadowOnly:
       if (ImGui::SliderFloat("Shadow Darkness", &options::shadowDarkness, .0, 1.0)) requestRedraw();
       if (ImGui::InputInt("Blur Iterations", &options::shadowBlurIters, 1)) requestRedraw();
+      break;
+    case GroundPlaneMode::Checkerboard:
+      if (ImGui::SliderFloat("Checkerboard Size", &options::checkerboardSize, 0.1f, 5.0f)) requestRedraw();
+      if (ImGui::ColorPicker3("Checkerboard Color", &options::checkerboardColor1[0])) requestRedraw();
+      if (ImGui::ColorPicker3("Checkerboard Color 2", &options::checkerboardColor2[0])) requestRedraw();
       break;
     }
 

@@ -11,6 +11,7 @@ namespace backend_openGL3 {
 extern const ShaderStageSpecification GROUND_PLANE_VERT_SHADER;
 extern const ShaderStageSpecification GROUND_PLANE_TILE_FRAG_SHADER;
 extern const ShaderStageSpecification GROUND_PLANE_TILE_REFLECT_FRAG_SHADER;
+extern const ShaderStageSpecification GROUND_PLANE_CHECKERBOARD_FRAG_SHADER;
 extern const ShaderStageSpecification GROUND_PLANE_SHADOW_FRAG_SHADER;
 
 // Rules

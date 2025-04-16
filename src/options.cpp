@@ -46,6 +46,9 @@ ScaledValue<float> groundPlaneHeightFactor = 0;
 float groundPlaneHeight = 0.;
 int shadowBlurIters = 2;
 float shadowDarkness = 0.25;
+float checkerboardSize = 1.0f;
+glm::vec3 checkerboardColor1 = {0.5f, 0.5f, 0.5f};
+glm::vec3 checkerboardColor2 = {0.25f, 0.25f, 0.25f};
 
 // Rendering options
 

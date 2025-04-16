@@ -7,6 +7,7 @@
 #include <tuple>
 
 #include "imgui.h"
+#include "glm/vec3.hpp"
 
 #include "polyscope/scaled_value.h"
 #include "polyscope/types.h"
@@ -82,6 +83,11 @@ extern ScaledValue<float> groundPlaneHeightFactor;
 extern float groundPlaneHeight;
 extern int shadowBlurIters;
 extern float shadowDarkness;
+
+// The size of the checkerboard squares, in world units
+extern float checkerboardSize;
+extern glm::vec3 checkerboardColor1;
+extern glm::vec3 checkerboardColor2;
 
 extern bool screenshotTransparency;     // controls whether screenshots taken by clicking the GUI button have a
                                         // transparent background

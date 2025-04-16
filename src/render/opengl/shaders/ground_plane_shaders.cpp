@@ -254,6 +254,124 @@ R"(
 )"
 };
 
+const ShaderStageSpecification GROUND_PLANE_CHECKERBOARD_FRAG_SHADER = {
+    
+    ShaderStageType::Fragment,
+
+    { // uniforms
+      {"u_lengthScale", RenderDataType::Float},
+      {"u_center", RenderDataType::Vector3Float},
+      {"u_basisX", RenderDataType::Vector3Float},
+      {"u_basisY", RenderDataType::Vector3Float},
+      {"u_viewportDim", RenderDataType::Vector2Float},
+      {"u_cameraHeight", RenderDataType::Float},
+      {"u_groundHeight", RenderDataType::Float},
+      {"u_upSign", RenderDataType::Float},
+      {"u_checkerSize", RenderDataType::Float},
+      {"u_checkerColor1", RenderDataType::Vector3Float},
+      {"u_checkerColor2", RenderDataType::Vector3Float},
+    }, 
+
+    // attributes
+    {
+    },
+    
+    // textures 
+    {
+        {"t_mirrorImage", 2},
+    },
+    
+    // source 
+R"(
+      ${ GLSL_VERSION }$
+
+      uniform sampler2D t_mirrorImage;
+      uniform mat4 u_viewMatrix;
+      uniform float u_lengthScale;
+      uniform vec3 u_center;
+      uniform vec3 u_basisX;
+      uniform vec3 u_basisY;
+      uniform vec2 u_viewportDim;
+      uniform float u_cameraHeight;
+      uniform float u_groundHeight;
+      uniform float u_upSign;
+      uniform float u_checkerSize;
+      uniform vec3 u_checkerColor1;
+      uniform vec3 u_checkerColor2;
+      in vec4 PositionWorldHomog;
+      layout(location = 0) out vec4 outputF;
+      
+      ${ FRAG_DECLARATIONS }$
+
+      float orenNayarDiffuse( vec3 lightDirection, vec3 viewDirection, vec3 surfaceNormal, float roughness, float albedo);
+      float specular( vec3 N, vec3 L, vec3 E, float shininess );
+
+      vec4 sampleMirror() {
+        vec2 screenCoords = vec2(gl_FragCoord.x, gl_FragCoord.y);
+        vec4 mirrorImage = texture(t_mirrorImage, screenCoords / u_viewportDim) ;
+        return mirrorImage;
+      }
+
+      void main()
+      {
+        float depth = gl_FragCoord.z;
+        ${ GLOBAL_FRAGMENT_FILTER }$
+
+        vec3 coord = PositionWorldHomog.xyz / PositionWorldHomog.w - u_center;
+        coord /= u_lengthScale * .5;
+        vec2 coord2D = vec2(dot(u_basisX, coord), dot(u_basisY, coord));
+
+        // Checkerboard calculation
+        vec2 scaledCoords = coord2D / u_checkerSize;
+        float checkerSum = floor(scaledCoords.x) + floor(scaledCoords.y);
+        float checkerPattern = mod(checkerSum, 2.0);
+        vec3 groundColor = mix(u_checkerColor1, u_checkerColor2, checkerPattern);
+
+        // Mirror image
+        //vec2 screenCoords = vec2(gl_FragCoord.x / u_viewportDim.x, gl_FragCoord.y / u_viewportDim.y);
+        //vec4 mirrorImage = texture(t_mirrorImage, screenCoords);
+        vec4 mirrorImage = sampleMirror();
+
+        // Ground color
+        vec3 color3 = mix(groundColor.rgb, mirrorImage.rgb * mirrorImage.w, .2 * mirrorImage.w);
+
+        // Lighting stuff
+        vec4 posCameraSpace4 = u_viewMatrix * PositionWorldHomog;
+        vec3 posCameraSpace = posCameraSpace4.xyz / posCameraSpace4.w;
+        vec3 normalCameraSpace = mat3(u_viewMatrix) * vec3(0., 1., 0.);
+        vec3 eyeCameraSpace = vec3(0., 0., 0.);
+        vec3 lightPosCameraSpace = vec3(5., 5., -5.) * u_lengthScale;
+        vec3 lightDir = normalize(lightPosCameraSpace - posCameraSpace);
+        vec3 eyeDir = normalize(eyeCameraSpace - posCameraSpace);
+
+        // Fade off removed
+        // float distFromCenter = length(coord2D);
+        // float distFadeFactor = 1.0 - smoothstep(8.0, 8.5, distFromCenter);
+        // float viewFromBelowFadeFactor = smoothstep(0, .1, u_upSign * (u_cameraHeight - u_groundHeight) / u_lengthScale);
+        // float fadeFactor = min(distFadeFactor, viewFromBelowFadeFactor);
+        // if(fadeFactor <= 0.) discard;
+        // vec4 color = vec4(color3, fadeFactor);
+        // vec4 color = vec4(color3, 1.0); // Use full alpha
+        float viewFromBelowFadeFactor = smoothstep(0, .1, u_upSign * (u_cameraHeight - u_groundHeight));
+        float fadeFactor = viewFromBelowFadeFactor;
+        if (fadeFactor <= 0.) discard;
+        vec4 color = vec4(color3, fadeFactor);
+
+        // NOTE: parameters swapped from comments.. which is correct?
+        float coloredBrightness = 1.2 * orenNayarDiffuse(eyeDir, lightDir, normalCameraSpace, .05, 1.0) + .3;
+        float whiteBrightness = .25 * specular(normalCameraSpace, lightDir, eyeDir, 12.);
+
+        float alphaOut = color.w; // Will be 1.0
+        vec3 litColor = color.xyz * coloredBrightness + vec3(1., 1., 1.) * whiteBrightness;
+
+        // Write output
+        litColor *= alphaOut; // premultiplied alpha
+        outputF = vec4(litColor, alphaOut);
+      }
+
+)"
+};
+
 const ShaderStageSpecification GROUND_PLANE_SHADOW_FRAG_SHADER = {
     
     ShaderStageType::Fragment,

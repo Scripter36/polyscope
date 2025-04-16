@@ -12,7 +12,7 @@ enum class FrontDir { XFront = 0, YFront, ZFront, NegXFront, NegYFront, NegZFron
 enum class BackgroundView { None = 0 };
 enum class ProjectionMode { Perspective = 0, Orthographic };
 enum class TransparencyMode { None = 0, Simple, Pretty };
-enum class GroundPlaneMode { None, Tile, TileReflection, ShadowOnly };
+enum class GroundPlaneMode { None, Tile, TileReflection, ShadowOnly, Checkerboard };
 enum class GroundPlaneHeightMode { Automatic = 0, Manual };
 enum class BackFacePolicy { Identical, Different, Custom, Cull };
 

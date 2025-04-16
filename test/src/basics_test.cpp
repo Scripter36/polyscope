@@ -166,6 +166,9 @@ TEST_F(PolyscopeTest, NavigationMode) {
   polyscope::view::setNavigateStyle(polyscope::NavigateStyle::FirstPerson);
   polyscope::show(3);
 
+  polyscope::view::setNavigateStyle(polyscope::NavigateStyle::Orbit);
+  polyscope::show(3);
+
   polyscope::view::setNavigateStyle(polyscope::NavigateStyle::Turntable); // set back to usual default
 }
 

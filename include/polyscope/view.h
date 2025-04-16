@@ -99,6 +99,7 @@ void lookAt(glm::vec3 cameraLocation, glm::vec3 target, glm::vec3 upDir, bool fl
 glm::mat4 computeHomeView();
 void resetCameraToHomeView();
 void flyToHomeView();
+void recalculateView();
 
 // Move the camera with a 'flight' where the camera's position is briefly animated
 void startFlightTo(const CameraParameters& p, float flightLengthInSeconds = .4);

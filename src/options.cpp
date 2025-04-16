@@ -2,6 +2,7 @@
 
 #include "polyscope/options.h"
 #include "polyscope/imgui_config.h"
+#include <glm/gtc/constants.hpp>
 
 namespace polyscope {
 namespace options {
@@ -49,6 +50,12 @@ float shadowDarkness = 0.25;
 float checkerboardSize = 1.0f;
 glm::vec3 checkerboardColor1 = {0.5f, 0.5f, 0.5f};
 glm::vec3 checkerboardColor2 = {0.25f, 0.25f, 0.25f};
+
+// Orbit controls
+glm::vec3 orbitCenter = {0.0f, 0.0f, 0.0f};
+float orbitRadius = 5.0f;
+float orbitYaw = 0.0f;
+float orbitPitch = glm::pi<float>() / 4.0f;
 
 // Rendering options
 

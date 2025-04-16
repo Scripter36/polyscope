@@ -84,6 +84,12 @@ extern float groundPlaneHeight;
 extern int shadowBlurIters;
 extern float shadowDarkness;
 
+// Orbit controls
+extern glm::vec3 orbitCenter;
+extern float orbitRadius;
+extern float orbitYaw;
+extern float orbitPitch;
+
 // The size of the checkerboard squares, in world units
 extern float checkerboardSize;
 extern glm::vec3 checkerboardColor1;

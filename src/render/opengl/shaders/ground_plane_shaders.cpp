@@ -312,6 +312,17 @@ R"(
         return mirrorImage;
       }
 
+      vec2 tri(vec2 x) {
+          return abs(fract(x - 0.5) * 2.0 - 1.0);
+      }
+
+      float checkersGrad( in vec2 uv, in vec2 ddx, in vec2 ddy )
+      {
+          vec2 w = max(abs(ddx), abs(ddy)) + 0.001;
+          vec2 i = (tri(uv + 0.5 * w) - tri(uv - 0.5 * w)) / w;
+          return clamp(0.5 - 0.5 * i.x * i.y, 0.0, 1.0);
+      }
+
       void main()
       {
         float depth = gl_FragCoord.z;
@@ -321,10 +332,11 @@ R"(
         coord /= u_lengthScale * .5;
         vec2 coord2D = vec2(dot(u_basisX, coord), dot(u_basisY, coord));
 
-        // Checkerboard calculation
+        // Checkerboard calculation using analytical anti-aliasing
         vec2 scaledCoords = coord2D / u_checkerSize;
-        float checkerSum = floor(scaledCoords.x) + floor(scaledCoords.y);
-        float checkerPattern = mod(checkerSum, 2.0);
+        vec2 ddx = dFdx(scaledCoords);
+        vec2 ddy = dFdy(scaledCoords);
+        float checkerPattern = checkersGrad(scaledCoords, ddx, ddy);
         vec3 groundColor = mix(u_checkerColor1, u_checkerColor2, checkerPattern);
 
         // Mirror image

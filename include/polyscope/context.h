@@ -30,9 +30,9 @@ class SlicePlane;
 class Widget;
 class FloatingQuantityStructure;
 namespace view {
-extern const double defaultNearClipRatio;
-extern const double defaultFarClipRatio;
-extern const double defaultFov;
+extern double defaultNearClipRatio;
+extern double defaultFarClipRatio;
+extern double defaultFov;
 } // namespace view
 
 // A context object wrapping all global state used by Polyscope.

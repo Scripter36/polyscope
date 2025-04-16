@@ -71,9 +71,9 @@ extern float& flightInitialFov;
 // Default values
 extern const int defaultWindowWidth;
 extern const int defaultWindowHeight;
-extern const double defaultNearClipRatio;
-extern const double defaultFarClipRatio;
-extern const double defaultFov;
+extern double defaultNearClipRatio;
+extern double defaultFarClipRatio;
+extern double defaultFov;
 
 // === View methods
 

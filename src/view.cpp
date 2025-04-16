@@ -46,9 +46,9 @@ float& flightInitialFov = state::globalContext.flightInitialFov;
 // Default values
 const int defaultWindowWidth = 1280;
 const int defaultWindowHeight = 720;
-const double defaultNearClipRatio = 0.005;
-const double defaultFarClipRatio = 20.0;
-const double defaultFov = 45.;
+double defaultNearClipRatio = 0.005;
+double defaultFarClipRatio = 20.0;
+double defaultFov = 45.;
 const double minFov = 5.;   // for UI
 const double maxFov = 160.; // for UI
 

@@ -293,9 +293,7 @@ void processTranslate(glm::vec2 delta) {
     getCameraFrame(lookDir, upVec, rightVec);
     polyscope::options::orbitCenter += movementScale * (-delta.x * rightVec - delta.y * upVec);
     recalculateView();
-  }
-  else
-  {
+  } else {
     // If turntable, scale by distance to center
     if (getNavigateStyle() == NavigateStyle::Turntable) {
       glm::vec3 camPos = state::center() - glm::vec3(viewMat[3]);
@@ -327,28 +325,26 @@ void processZoom(double amount, bool relativeToCenter) {
     polyscope::options::orbitRadius *= std::pow(1.1, -amount);
     polyscope::options::orbitRadius = std::max(polyscope::options::orbitRadius, 0.1f);
     recalculateView();
-  }
-  else
-  {
+  } else {
     // Translate the camera forwards and backwards
     switch (projectionMode) {
-      case ProjectionMode::Perspective: {
-        float movementScale;
-        if (relativeToCenter) {
-            movementScale = glm::length(view::viewCenter - view::getCameraWorldPosition()) * 0.3 * moveScale;
-        } else {
-            movementScale = state::lengthScale * 0.1 * moveScale;
-        }
-        glm::mat4x4 camSpaceT = glm::translate(glm::mat4x4(1.0), glm::vec3(0., 0., movementScale * amount));
-        viewMat = camSpaceT * viewMat;
-        break;
+    case ProjectionMode::Perspective: {
+      float movementScale;
+      if (relativeToCenter) {
+        movementScale = glm::length(view::viewCenter - view::getCameraWorldPosition()) * 0.3 * moveScale;
+      } else {
+        movementScale = state::lengthScale * 0.1 * moveScale;
       }
-      case ProjectionMode::Orthographic: {
-        double fovScale = std::min(fov - minFov, maxFov - fov) / (maxFov - minFov);
-        fov += -fovScale * amount;
-        fov = glm::clamp(fov, minFov, maxFov);
-        break;
-      }
+      glm::mat4x4 camSpaceT = glm::translate(glm::mat4x4(1.0), glm::vec3(0., 0., movementScale * amount));
+      viewMat = camSpaceT * viewMat;
+      break;
+    }
+    case ProjectionMode::Orthographic: {
+      double fovScale = std::min(fov - minFov, maxFov - fov) / (maxFov - minFov);
+      fov += -fovScale * amount;
+      fov = glm::clamp(fov, minFov, maxFov);
+      break;
+    }
     }
   }
 
@@ -442,19 +438,19 @@ void ensureViewValid() {
 }
 
 glm::mat4 computeHomeView() {
-    if (getNavigateStyle() == NavigateStyle::Orbit) {
-        polyscope::options::orbitYaw = 0.0f;
-        polyscope::options::orbitPitch = glm::pi<float>() / 4.0f;
-        polyscope::options::orbitRadius = 5.0f;
-        polyscope::options::orbitCenter = state::center();
-    
-        glm::vec3 camPos = polyscope::options::orbitCenter +
-                           polyscope::options::orbitRadius *
-                               glm::vec3(std::cos(polyscope::options::orbitYaw) * std::cos(polyscope::options::orbitPitch),
-                                         std::sin(polyscope::options::orbitPitch),
-                                         std::sin(polyscope::options::orbitYaw) * std::cos(polyscope::options::orbitPitch));
-        return glm::lookAt(camPos, polyscope::options::orbitCenter, getUpVec());
-      }
+  if (getNavigateStyle() == NavigateStyle::Orbit) {
+    polyscope::options::orbitYaw = 0.0f;
+    polyscope::options::orbitPitch = glm::pi<float>() / 4.0f;
+    polyscope::options::orbitRadius = 5.0f;
+    polyscope::options::orbitCenter = state::center();
+
+    glm::vec3 camPos = polyscope::options::orbitCenter +
+                       polyscope::options::orbitRadius *
+                           glm::vec3(std::cos(polyscope::options::orbitYaw) * std::cos(polyscope::options::orbitPitch),
+                                     std::sin(polyscope::options::orbitPitch),
+                                     std::sin(polyscope::options::orbitYaw) * std::cos(polyscope::options::orbitPitch));
+    return glm::lookAt(camPos, polyscope::options::orbitCenter, getUpVec());
+  }
   glm::vec3 target = view::viewCenter;
   glm::vec3 upDir = getUpVec();
   glm::vec3 frontDir = getFrontVec();
@@ -509,27 +505,9 @@ void recalculateView() {
                                      std::sin(polyscope::options::orbitPitch),
                                      std::sin(polyscope::options::orbitYaw) * std::cos(polyscope::options::orbitPitch));
     viewMat = glm::lookAt(camPos, polyscope::options::orbitCenter, getUpVec());
-  }
-  else
-  {
+  } else {
     // not supported warning
-    warning("recalculateView() is supported for only orbit navigation style");
-  }
-}
-
-void recalculateView() {
-  if (getNavigateStyle() == NavigateStyle::Orbit) {
-    glm::vec3 camPos = polyscope::options::orbitCenter +
-                       polyscope::options::orbitRadius *
-                           glm::vec3(std::cos(polyscope::options::orbitYaw) * std::cos(polyscope::options::orbitPitch),
-                                     std::sin(polyscope::options::orbitPitch),
-                                     std::sin(polyscope::options::orbitYaw) * std::cos(polyscope::options::orbitPitch));
-    viewMat = glm::lookAt(camPos, polyscope::options::orbitCenter, getUpVec());
-  }
-  else
-  {
-    // not supported warning
-    warning("recalculateView() is supported for only orbit navigation style");
+    warning("recalculateView() is supported for only orbit navigation style or first person style");
   }
 }
 
@@ -541,7 +519,8 @@ void updateViewAndChangeNavigationStyle(NavigateStyle newStyle, bool flyTo) {
     // for a few combinations of views, we can leave the camera where it is rather than resetting to the home view
     if (newStyle == NavigateStyle::Free) {
       // nothing needed
-    } else if (newStyle == NavigateStyle::FirstPerson && (oldStyle == NavigateStyle::Turntable || oldStyle == NavigateStyle::Orbit)) {
+    } else if (newStyle == NavigateStyle::FirstPerson &&
+               (oldStyle == NavigateStyle::Turntable || oldStyle == NavigateStyle::Orbit)) {
       // nothing needed
     } else if (newStyle == NavigateStyle::Turntable || newStyle == NavigateStyle::Orbit) {
       // leave the camera in the same location
@@ -573,6 +552,7 @@ void updateViewAndChangeUpDir(UpDir newUpDir, bool flyTo) {
     case NavigateStyle::Turntable:
     case NavigateStyle::Planar:
     case NavigateStyle::Arcball:
+    case NavigateStyle::Orbit:
     case NavigateStyle::FirstPerson: {
       glm::vec3 lookDir = getCameraParametersForCurrentView().getLookDir();
       if (std::fabs(dot(view::getUpVec(), lookDir)) < 0.01) {
@@ -610,6 +590,7 @@ void updateViewAndChangeFrontDir(FrontDir newFrontDir, bool flyTo) {
     case NavigateStyle::Arcball:
     case NavigateStyle::Free:
     case NavigateStyle::FirstPerson:
+    case NavigateStyle::Orbit:
     case NavigateStyle::None:
       // Currently no views require updating to conform to the front dir, it is just for the default pose
       break;
@@ -629,6 +610,7 @@ void updateViewAndChangeCenter(glm::vec3 newCenter, bool flyTo) {
     // to the center.
     switch (style) {
     case NavigateStyle::Turntable:
+    case NavigateStyle::Orbit:
     case NavigateStyle::Planar:
     case NavigateStyle::Arcball:
       // this is a decent baseliny policy that always does _something_ sane
@@ -993,8 +975,8 @@ void buildViewGui() {
     std::string viewStyleName = to_string(view::style);
 
     ImGui::PushItemWidth(120 * options::uiScale);
-    std::array<NavigateStyle, 6> styles{NavigateStyle::Turntable, NavigateStyle::Free, NavigateStyle::Planar,
-        NavigateStyle::None, NavigateStyle::FirstPerson, NavigateStyle::Orbit};
+    std::array<NavigateStyle, 6> styles{NavigateStyle::Turntable, NavigateStyle::Free,        NavigateStyle::Planar,
+                                        NavigateStyle::None,      NavigateStyle::FirstPerson, NavigateStyle::Orbit};
     if (ImGui::BeginCombo("##View Style", viewStyleName.c_str())) {
 
       for (NavigateStyle s : styles) {

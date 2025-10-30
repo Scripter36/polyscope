@@ -14,13 +14,13 @@ bool allowHeadlessBackends = false;
 bool errorsThrowExceptions = false;
 bool debugDrawPickBuffer = false;
 int maxFPS = 60;
-
 #ifdef _WIN32
 // set the default vsync to false on windows, to workaround an glfw errors from an alleged driver bug
 bool enableVSync = false;
 #else
 bool enableVSync = true;
 #endif
+LimitFPSMode frameTickLimitFPSMode = LimitFPSMode::SkipFramesToHitTarget;
 
 bool usePrefsFile = true;
 bool initializeWithDefaultStructures = true;
@@ -35,6 +35,7 @@ bool warnForInvalidValues = true;
 bool displayMessagePopups = true;
 
 bool screenshotTransparency = true;
+bool screenshotWithImGuiUI = false;
 std::string screenshotExtension = ".png";
 
 // == Scene options
@@ -59,6 +60,7 @@ float orbitPitch = glm::pi<float>() / 4.0f;
 
 // Rendering options
 
+float uiScale = -1.0; // unset, must be set manually or during initialization
 int ssaaFactor = 1;
 
 // Transparency

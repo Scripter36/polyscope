@@ -56,6 +56,7 @@ extern std::array<float, 4>& bgColor;
 extern glm::mat4x4& viewMat;
 extern double& fov; // in the y direction
 extern ProjectionMode& projectionMode;
+extern glm::vec3& viewCenter; // center about which view transformations are performed
 
 // "Flying" view members
 extern bool& midflight;
@@ -89,17 +90,28 @@ glm::vec3 getCameraWorldPosition();
 void getCameraFrame(glm::vec3& lookDir, glm::vec3& upDir, glm::vec3& rightDir);
 glm::vec3 getUpVec();
 glm::vec3 getFrontVec();
+float getVerticalFieldOfViewDegrees();
+float getAspectRatioWidthOverHeight();
 
 // Set the camera extrinsics to look at a particular location
 void setViewToCamera(const CameraParameters& p);
 void lookAt(glm::vec3 cameraLocation, glm::vec3 target, bool flyTo = false);
 void lookAt(glm::vec3 cameraLocation, glm::vec3 target, glm::vec3 upDir, bool flyTo = false);
+void setVerticalFieldOfViewDegrees(float newVal);
 
 // The "home" view looks at the center of the scene's bounding box.
 glm::mat4 computeHomeView();
 void resetCameraToHomeView();
 void flyToHomeView();
 void recalculateView();
+void setViewCenter(glm::vec3 newCenter, bool flyTo = false);
+glm::vec3 getViewCenter();
+
+// These both set the new value, and project the current view as-needed to conform to the new setting
+void updateViewAndChangeNavigationStyle(NavigateStyle newStyle, bool flyTo = false);
+void updateViewAndChangeUpDir(UpDir newUpDir, bool flyTo = false);
+void updateViewAndChangeFrontDir(FrontDir newFrontDir, bool flyTo = false);
+void updateViewAndChangeCenter(glm::vec3 newCenter, bool flyTo = false);
 
 // Move the camera with a 'flight' where the camera's position is briefly animated
 void startFlightTo(const CameraParameters& p, float flightLengthInSeconds = .4);
@@ -169,6 +181,7 @@ void updateFlight();
 // It is set to invalid initially, but we call ensureViewValid() before any renders.
 // This ensures we never try to render with an invalid view, but also allows the user to
 // set custom views if they wish, without them getting overwritten.
+bool viewIsValid();
 void invalidateView();
 void ensureViewValid();
 
@@ -176,8 +189,9 @@ void ensureViewValid();
 void processTranslate(glm::vec2 delta);
 void processRotate(glm::vec2 startP, glm::vec2 endP);
 void processClipPlaneShift(double amount);
-void processZoom(double amount);
+void processZoom(double amount, bool relativeToCenter = false);
 void processKeyboardNavigation(ImGuiIO& io);
+void processSetCenter(glm::vec2 screenCoords);
 
 // deprecated, bad names, see variants above
 glm::vec3 bufferCoordsToWorldRay(glm::vec2 bufferCoords);
